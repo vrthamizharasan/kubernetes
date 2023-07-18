@@ -1,0 +1,74 @@
+# creating the nginx deployment 
+
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: deploy1
+  labels:
+    app: webapp
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: webapp 
+  template:
+    metadata:
+      labels: 
+        app: webapp
+    spec:
+      containers:
+      - name: containerpdb
+        image: nginx
+        ports:
+        - name: http 
+          containerPort: 80
+
+---
+# creating the PDB 
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: mypdb
+spec:
+  maxUnavailable: 50%
+  selector:
+    matchLabels:
+      app: webapp  
+
+ansadmin@ubuntu-s-2vcpu-2gb-sfo3-01:~/kubernetes$ kubectl get pods
+NAME                       READY   STATUS    RESTARTS   AGE
+deploy1-777b66d95d-2csq6   1/1     Running   0          33s
+deploy1-777b66d95d-5xgff   1/1     Running   0          33s
+deploy1-777b66d95d-td5n9   1/1     Running   0          33s
+deploy1-777b66d95d-v29hw   1/1     Running   0          33s
+ansadmin@ubuntu-s-2vcpu-2gb-sfo3-01:~/kubernetes$ kubectl get pdb
+NAME    MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
+mypdb   N/A             50%               2                     2m58s
+ansadmin@ubuntu-s-2vcpu-2gb-sfo3-01:~/kubernetes$ kubectl describe mypdb
+error: the server doesn't have a resource type "mypdb"
+ansadmin@ubuntu-s-2vcpu-2gb-sfo3-01:~/kubernetes$ kubectl describe pdb mypdb
+Name:             mypdb
+Namespace:        default
+Max unavailable:  50%
+Selector:         app=webapp
+Status:
+    Allowed disruptions:  2
+    Current:              4
+    Desired:              2
+    Total:                4
+Events:
+  Type     Reason         Age                   From               Message
+  ----     ------         ----                  ----               -------
+  Warning  UnmanagedPods  40s (x25 over 3m19s)  controllermanager  Pods selected by this PodDisruptionBudget (selector: &LabelSelector{MatchLabels:map[string]string{app: webapp,},MatchExpressions:[]LabelSelectorRequirement{},}) were found to be unmanaged. As a result, the status of the PDB cannot be calculated correctly, which may result in undefined behavior. To account for these pods please set ".spec.minAvailable" field of the PDB to an integer value.       
+
+ansadmin@ubuntu-s-2vcpu-2gb-sfo3-01:~/kubernetes$ kubectl get pods
+NAME                       READY   STATUS    RESTARTS   AGE
+deploy1-777b66d95d-2csq6   1/1     Running   0          4m7s
+deploy1-777b66d95d-bxbrm   0/1     Pending   0          40s
+deploy1-777b66d95d-f79mh   0/1     Pending   0          40s
+deploy1-777b66d95d-td5n9   1/1     Running   0          4m7s
+ansadmin@ubuntu-s-2vcpu-2gb-sfo3-01:~/kubernetes$ kubectl drain pool-dis0acvfu-f1h0q --ignore-daemonsets
+  
+ansadmin@ubuntu-s-2vcpu-2gb-sfo3-01:~/kubernetes$ kubectl uncordon pool-dis0acvfu-f1h0q
+node/pool-dis0acvfu-f1h0q uncordoned  
