@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Pod 
+metadata:
+ name: pod1
+ labels:
+   app: webapp 
+spec:
+  containers:
+  - name: con1
+    image: nginxx 
+    ports:
+    - name: http 
+      containerPort: 80    
+
+ansadmin@ubuntu-s-2vcpu-2gb-sfo3-01:~/kubernetes$ kubectl get pods
+NAME   READY   STATUS         RESTARTS   AGE
+pod1   0/1     ErrImagePull   0          10s
+ansadmin@ubuntu-s-2vcpu-2gb-sfo3-01:~/kubernetes$
+
+# Its shows the ErrImagePull error 
+
+# kubectl describe pod pod1 
+
+Events:
+  Type     Reason     Age                From               Message
+  ----     ------     ----               ----               -------
+  Normal   Scheduled  87s                default-scheduler  Successfully assigned default/pod1 to pool-dis0acvfu-f1h0q
+  Normal   BackOff    16s (x5 over 86s)  kubelet            Back-off pulling image "nginxx"
+  Warning  Failed     16s (x5 over 86s)  kubelet            Error: ImagePullBackOff
+  Normal   Pulling    4s (x4 over 87s)   kubelet            Pulling image "nginxx"
+  Warning  Failed     3s (x4 over 86s)   kubelet            Failed to pull image "nginxx": rpc error: code = Unknown desc = failed to pull and unpack image "docker.io/library/nginxx:latest": failed to resolve reference "docker.io/library/nginxx:latest": pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed
+  Warning  Failed     3s (x4 over 86s)   kubelet            Error: ErrImagePull
+
+# kubectl edit pod pod1  
+change the image name mismatch 
+
+ansadmin@ubuntu-s-2vcpu-2gb-sfo3-01:~/kubernetes$ kubectl get pods
+NAME   READY   STATUS    RESTARTS   AGE
+pod1   1/1     Running   0          3m27s
+
