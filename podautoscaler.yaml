@@ -1,0 +1,64 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: php-apache
+spec: 
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: php-readed 
+  minReplicas: 3
+  maxReplicas: 10 
+  metrics:
+  - type: Resource 
+    resource:
+       name: cpu 
+       target:
+         type: Utilization 
+         averageUtilization: 50   
+
+#Resourec details is the default entry should be added in the deployment 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-readed
+  labels:
+    app: webapp
+spec: 
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webapp 
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+      - name: php-readed
+        image: nginx 
+        ports:
+        - name: http 
+          containerPort: 80 
+        resources:
+          requests:
+            cpu: 200m 
+          limits:
+            cpu: 500m     
+---
+apiVersion: v1
+kind: Service 
+metadata:
+  name: php-readed
+  labels:
+    app: webapp
+spec:   
+  selector:
+        app: webapp
+  ports:
+  - port: 80
+    targetPort: 80       
+
+
+          
